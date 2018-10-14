@@ -6,6 +6,8 @@
 #include <math.h>
 #include <time.h>
 
+#define MAX_POWER 4294967296
+
 #define LOG {printf("IN FILE %s || IN LINE %d\n", __FILE__, __LINE__); fflush(stdout);}
 #define UNTIL(X) {while(fgetc(fp) != X);}
 
@@ -32,5 +34,8 @@ void save_neural(char *filename, NeuNet neural);
 void destroy_neural(NeuNet neural);
 BackProp start_backprop(NeuNet neutral);
 void destroy_backprop(BackProp back, NeuNet neural);
+
+/* Using the neural network */
+void use_neural(NeuNet neural, unsigned int num, int back);
 
 #endif

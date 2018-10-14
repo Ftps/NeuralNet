@@ -47,7 +47,7 @@ NeuNet load_neural(char *filename, int new)
     neural.wei = (float***)malloc(sizeof(float**)*neural.l);
 
     for(int i = 0; i < neural.l; ++i){
-        neural.neu[i] = (float*)calloc(neural.sub_l[i], sizeof(float));
+        neural.neu[i] = (float*)malloc(sizeof(float)*neural.sub_l[i]);
         if(i){
             neural.bias[i] = (float*)malloc(sizeof(float)*neural.sub_l[i]);
             neural.wei[i] = (float**)malloc(sizeof(float*)*neural.sub_l[i]);
@@ -76,9 +76,9 @@ NeuNet load_neural(char *filename, int new)
     else{
         for(int i = 1; i < neural.l; ++i){
             for(int j = 0; j < neural.sub_l[i]; ++j){
-                neural.bias[i][j] = (rand() % 7) - 3;
+                neural.bias[i][j] = ((rand() % 8001) - 4000)/1000.0;
                 for(int k = 0; k < neural.sub_l[i-1]; ++k){
-                    neural.wei[i][j][k] = (rand() % 7) - 3;
+                    neural.wei[i][j][k] = ((rand() % 8001) - 4000)/1000.0;
                 }
             }
         }
@@ -168,4 +168,48 @@ void destroy_backprop(BackProp back, NeuNet neural)
     free(back.neu_grad);
     free(back.bias_grad);
     free(back.wei_grad);
+}
+
+
+/* Using the neural network */
+
+void use_neural(NeuNet neural, unsigned int num, int back)
+{
+    float aux;
+    int *teo;
+
+    printf("%d\n", num);
+
+    for(int i = 0; i < neural.sub_l[0]; ++i){
+        neural.neu[0][i] = (num & 1<<i) ? 1: 0;
+    }
+
+    for(int i = 1; i < neural.l; ++i){
+        for(int j = 0; j < neural.sub_l[i]; ++j){
+            aux = neural.bias[i][j];
+            for(int k = 0; k < neural.sub_l[i-1]; ++k){
+                aux += neural.wei[i][j][k]*neural.neu[i-1][k];
+            }
+            neural.neu[i][j] = sigmoid(aux);
+        }
+    }
+
+    if(!back){
+        teo = (int*)malloc(sizeof(int)*neural.sub_l[neural.l-1]);
+        aux = 0;
+        for(int i = 0; i < neural.sub_l[0]; ++i){
+            aux += neural.neu[0][i];
+        }
+        printf("Number: %d or %x.\n", num, num);
+        printf("Number of bits: %d\n", (int)aux);
+        aux = 0;
+        for(int i = 0; i < neural.sub_l[neural.l-1]; ++i){
+            if(neural.neu[neural.l-1][i] < 0.5){
+                aux += 1<<i;
+                teo[i] = 1;
+            }
+            else teo[i] = 0;
+        }
+        printf("Number by NeuNet: %d, Cost: %f\n\n", (int)aux, cost_func(neural.neu[neural.l-1], teo, neural.sub_l[neural.l-1]));
+    }
 }
